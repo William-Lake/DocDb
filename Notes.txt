@@ -1,0 +1,59 @@
+
+
+UI
+	VBox
+		MenuBar
+			File
+				Import Document
+				Quit
+		TableView - Document DB 
+			Shows Documents
+			Double click listener on each row
+				Opens a file dialog where the user decides where to save the document
+				When 'Ok' clicked
+					Document written to file
+					Document added to watch service
+		TableView - Document Status'
+			Shows Documents currently checked out and their status
+			Double click listener on each row
+				Imports document
+				deletes from file system
+				removes from table
+				removes from watchservice
+							
+// ==================================================================
+	
+DB should store:
+	Document name
+	Document desription
+	Document glob
+	Document add date
+	Document mod date
+	
+	CREATE TABLE doc
+	(
+		id INTEGER NOT NULL PRIMARY KEY,
+		name TEXT NOT NULL,
+		description TEXT,
+		data BLOB NOT NULL, 
+		add_date TEXT,
+		mod_date TEXT
+	);
+	
+	CREATE TRIGGER trg_add_date 
+	AFTER INSERT
+	ON doc
+	BEGIN
+		UPDATE doc 
+		SET add_date = DATETIME('NOW') 
+		WHERE id = NEW.id;
+	END;
+	
+	CREATE TRIGGER trg_mod_date
+	AFTER UPDATE
+	ON doc
+	BEGIN
+		UPDATE doc 
+		SET mod_date = DATETIME('NOW')
+		WHERE id = NEW.id;
+	END;
