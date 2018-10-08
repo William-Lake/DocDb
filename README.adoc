@@ -1,5 +1,29 @@
 = DocDB
+William Lake
+:icons: font
+:imagesdir: images
+:datauri:
+:toc: left
+:source-highlighter: coderay
 
-_This is just a test._
+WARNING: This project is still being developed, and is not ready for use.
 
-Hoping to find out if the Github README *must* be markdown, or if they will accept .adoc instead...
+== Overview
+
+This project exists as a self-imposed challenge. My goal is to build a piece of desktop software using:
+
+* JavaFX/FXML
+* SceneBuilder
+
+Which:
+
+* Stores documents in an encrypted and/or password protected sqlite database.
+* Provides access to the database:
+** Loading files from it,
+** Saving files to it,
+** Updating/Deleting files in it
+
+== Current Status
+
+*UI:* _In progress, tentative final planning draft complete._
+*SERVICE:* _In progress, next major step is implementing Concurrency with the DMZManager._
