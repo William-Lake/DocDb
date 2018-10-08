@@ -2,24 +2,23 @@
 
 UI
 	VBox
-		MenuBar
-			File
-				Import Document
-				Quit
-		TableView - Document DB 
-			Shows Documents
+		HBox
+			TextField - Search Params
+			Button - Search
+		TableView - DB Monitor
+			Shows Documents in DB
 			Double click listener on each row
-				Opens a file dialog where the user decides where to save the document
-				When 'Ok' clicked
-					Document written to file
-					Document added to watch service
-		TableView - Document Status'
-			Shows Documents currently checked out and their status
-			Double click listener on each row
-				Imports document
-				deletes from file system
-				removes from table
-				removes from watchservice
+				Moves selected item to DMZ
+			Context Menu on each row
+				Delete - Deletes doc from database
+				Move to DMZ
+		TableView - DMZ Monitor
+			Shows documents currently in the DMZ and their status.
+			Double Click listener on each row
+				Moves selected item to DB
+			ContextMenu on each row
+				Import
+				Delete
 							
 // ==================================================================
 	

@@ -1,6 +1,5 @@
 package com.lakedev.docdb.service.db;
 
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,89 +12,34 @@ class DbConnection
 	private Connection connection;
 	
 	// TODO Figure out how to password protect and/or encrypt a sqlite db.
+	// TODO Encrypt these and put them in a .properties file. 
 	private static final String USER = ""; // TODO Pick out
 	
 	private static final String PASSWORD = ""; // TODO Pick out
 	
-	private static final String DB_PATH = Paths.get(System.getProperty("user.dir"), "Docs.db").toAbsolutePath().toString();
+	public static final String DB_PATH = Paths.get(System.getProperty("user.dir"), "Docs.db").toAbsolutePath().toString();
+	
+	public static final String[] TABLE_NAMES = {"doc"};
 	
 	private static final String CONNECTION_STRING = "jdbc:sqlite:" + DB_PATH;
 	
 	public boolean connect()
 	{
-		try
-		{
-			boolean createTables = Files.exists(Paths.get(DB_PATH)) == false;
-			
-			connection = DriverManager.getConnection(CONNECTION_STRING);
-			
-			if (createTables) createTables();
-			
-			return true;
-		}
-		catch (SQLException e)
-		{
-			// TODO Log this
-			e.printStackTrace();
-			
-			return false;
-		}
-	}
-	
-	private void createTables()
-	{
-		// TODO Pretty sure the
+		boolean connectionSuccessful = false;
 		
 		try
 		{
-			StringBuilder query = 
-					
-					new StringBuilder()
-					.append("CREATE TABLE doc ")
-					.append("( ")
-					.append("    id INTEGER NOT NULL PRIMARY KEY, ")
-					.append("    name TEXT NOT NULL, ")
-					.append("    description TEXT, ")
-					.append("    data BLOB NOT NULL,  ")
-					.append("    add_date INTEGER, ")
-					.append("    mod_date INTEGER  ")
-					.append(") ");
+			connection = DriverManager.getConnection(CONNECTION_STRING);
 			
-			executeStatement(query.toString());
-			
-			query = 
-					
-					new StringBuilder()
-					.append("CREATE TRIGGER trg_add_date  ")
-					.append("AFTER INSERT ")
-					.append("ON doc ")
-					.append("BEGIN ")
-					.append("    UPDATE doc  ")
-					.append("    SET add_date = DATETIME('NOW')  ")
-					.append("    WHERE id = NEW.id; ")
-					.append("END ");
-			
-			executeStatement(query.toString());
-			
-			query = 
-					
-					new StringBuilder()
-					.append("CREATE TRIGGER trg_mod_date ")
-					.append("AFTER UPDATE ")
-					.append("ON doc ")
-					.append("BEGIN ")
-					.append("    UPDATE doc  ")
-					.append("    SET mod_date = DATETIME('NOW') ")
-					.append("    WHERE id = NEW.id; ")
-					.append("END ");
-			
-			executeStatement(query.toString());
-			
-		} catch (SQLException e)
+			connectionSuccessful = true;
+		}
+		catch (SQLException e)
 		{
+			// TODO Log
 			e.printStackTrace();
 		}
-
+		
+		return connectionSuccessful;
 	}
 	
 	public ResultSet executeSelect(String query) throws SQLException

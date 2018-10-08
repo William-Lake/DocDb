@@ -1,4 +1,4 @@
-package com.lakedev.docdb.service;
+package com.lakedev.docdb.service.db;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -15,8 +15,6 @@ public class Doc
 	
 	private LocalDate modDate;
 	
-	private Path docPath;
-
 	public Doc(int id, String name, String description, LocalDate addDate, LocalDate modDate)
 	{
 		super();
@@ -50,16 +48,6 @@ public class Doc
 	public LocalDate getModDate()
 	{
 		return modDate;
-	}
-	
-	public void setDocPath(Path docPath)
-	{
-		this.docPath = docPath;
-	}
-	
-	public Path getDocPath()
-	{
-		return docPath;
 	}
 	
 }

@@ -1,6 +1,7 @@
 package com.lakedev.docdb.ui;
 
 import com.lakedev.docdb.service.db.DataSource;
+import com.lakedev.docdb.service.dmz.DMZManager;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -9,6 +10,31 @@ import javafx.stage.Stage;
 
 public class MainApp extends Application
 {
+	
+	@Override
+	public void init() throws Exception
+	{
+		if (
+				DMZManager
+				.getInstance() 
+				.dmzExists() == false)
+		{
+			// TODO Alert the user, Log
+			
+			stop();
+		} else if (
+				
+				DataSource
+				.getInstance()
+				.isConnected() == false)
+		{
+			// TODO Alert the user, Log
+			
+			stop();
+		}
+		
+		super.init();
+	}
 
 	public static void main(String[] args)
 	{
@@ -28,9 +54,23 @@ public class MainApp extends Application
 	@Override
 	public void stop() throws Exception
 	{
-		DataSource
-		.getInstance()
-		.closeConnection();
+		if (
+				DMZManager
+				.getInstance()
+				.dmzExists())
+		{
+			// TODO Determine what you want to do with the DMZ and documents in it.
+		}
+		
+		if (
+				DataSource
+				.getInstance()
+				.isConnected())
+		{
+			DataSource
+			.getInstance()
+			.closeConnection();
+		}
 		
 		super.stop();
 	}
