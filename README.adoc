@@ -1,0 +1,5 @@
+= DocDB
+
+_This is just a test._
+
+Hoping to find out if the Github README *must* be markdown, or if they will accept .adoc instead...
