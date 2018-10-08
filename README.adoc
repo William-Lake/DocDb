@@ -3,7 +3,6 @@ William Lake
 :icons: font
 :imagesdir: images
 :datauri:
-:toc: left
 :source-highlighter: coderay
 
 WARNING: This project is still being developed, and is not ready for use.
@@ -25,5 +24,5 @@ Which:
 
 == Current Status
 
-*UI:* _In progress, tentative final planning draft complete._
-*SERVICE:* _In progress, next major step is implementing Concurrency with the DMZManager._
+* *UI:* _In progress, tentative final planning draft complete._
+* *SERVICE:* _In progress, next major step is implementing Concurrency with the DMZManager._
