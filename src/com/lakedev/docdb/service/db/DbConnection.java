@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.pmw.tinylog.Logger;
+
 class DbConnection
 {
 	private Connection connection;
@@ -25,6 +27,8 @@ class DbConnection
 	
 	public boolean connect()
 	{
+		Logger.info("Connecting to " + DB_PATH);
+		
 		boolean connectionSuccessful = false;
 		
 		try
@@ -32,19 +36,25 @@ class DbConnection
 			connection = DriverManager.getConnection(CONNECTION_STRING);
 			
 			connectionSuccessful = true;
+			
+			Logger.debug("Successfully connected to " + DB_PATH);
 		}
 		catch (SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			
+			Logger.error("Error while trying to connect to DB: \n" + e);
+			
+			Logger.trace(e);
 		}
 		
 		return connectionSuccessful;
 	}
 	
-	public ResultSet executeSelect(String query) throws SQLException
+	public ResultSet executeSelect(String statement) throws SQLException
 	{
-		return connection.createStatement().executeQuery(query);
+		Logger.debug("Executing Select: \n" + formatStatementForLogs(statement));
+		
+		return connection.createStatement().executeQuery(statement);
 	}
 	
 	public ResultSet executeSelect(PreparedStatement preparedStatement) throws SQLException
@@ -52,9 +62,11 @@ class DbConnection
 		return preparedStatement.executeQuery();
 	}
 	
-	public boolean executeStatement(String sql) throws SQLException
+	public boolean executeStatement(String statement) throws SQLException
 	{
-		return connection.createStatement().execute(sql);
+		Logger.debug("Executing Statement: \n" + formatStatementForLogs(statement));
+		
+		return connection.createStatement().execute(statement);
 	}
 	
 	public boolean executeStatement(PreparedStatement preparedStatement) throws SQLException
@@ -64,7 +76,28 @@ class DbConnection
 	
 	public PreparedStatement createPreparedStatement(String statement) throws SQLException
 	{
+		Logger.debug("Creating PreparedStatement for String statement: \n" + formatStatementForLogs(statement));
+		
 		return connection.prepareStatement(statement, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+	}
+	
+	/**
+	 * Formats the given String SQL statement so it can be 
+	 * easy to read when placed in the logs.
+	 * 
+	 * @param statement
+	 * 			The String statement to format for the logs.
+	 * @return The formatted String statement.
+	 */
+	private String formatStatementForLogs(String statement)
+	{
+		return 
+				
+				statement
+				.replaceAll(
+						"((?:SELECT|INSERT|UPDATE|FROM|WHERE|AND|OR|INNER|LEFT))", 
+						"\n\t$1") 
+				+ "\n";
 	}
 	
 	public void disconnect()

@@ -1,6 +1,8 @@
 package com.lakedev.docdb.service.db;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
@@ -10,6 +12,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.pmw.tinylog.Logger;
 
 import com.lakedev.docdb.service.dmz.DMZManager;
 
@@ -28,29 +32,31 @@ public class DataSource
 	
 	private DataSource()
 	{
+		Logger.info("Initializing DataSource");
+		
 		// TODO It would be useful to allow the user to connect to different databases, or identify what database they want to connect to.
 		
 		dbConnection = new DbConnection();
 		
-		boolean dbExists = 
-				
+		boolean doContinue = true;
+		
+		if (
 				Files
 				.exists(
 						Paths
-						.get(DbConnection.DB_PATH));
-		
-		if (dbExists == false) dbExists = createDb();
-
-		dbExists = tablesExist();
-		
-		if (dbExists == false) dbExists = createTables();
-		
-		if (dbExists)
+						.get(DbConnection.DB_PATH)) == false)
 		{
-			connected = dbConnection.connect();
-		} else
+			doContinue = createDb();
+		}
+		
+		if (doContinue)
 		{
-			// TODO Log that you couldn't find/create the DB or tables.
+			if (tablesExist() == false) doContinue = createTables();
+			
+			if (doContinue)
+			{
+				connected = dbConnection.connect();
+			}
 		}
 	}
 	
@@ -61,6 +67,8 @@ public class DataSource
 	
 	private boolean createDb()
 	{
+		Logger.debug("Creating Database");
+		
 		boolean databaseCreated = false;
 		
 		try
@@ -69,10 +77,13 @@ public class DataSource
 			
 			databaseCreated = true;
 			
+			Logger.debug("Database successfully created.");
+			
 		} catch (IOException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			Logger.error("Error while creating Database: \n" + e);
+			
+			Logger.trace(e);
 		}
 		
 		return databaseCreated;
@@ -80,6 +91,8 @@ public class DataSource
 	
 	private boolean tablesExist()
 	{
+		Logger.debug("Checking if tables exist");
+		
 		boolean tablesExist = false;
 		
 		StringBuilder query = 
@@ -109,8 +122,12 @@ public class DataSource
 				
 				tablesExist = tableCount == DbConnection.TABLE_NAMES.length;
 				
+				Logger.debug(String.format("%d of the required %d tables exist", tableCount, DbConnection.TABLE_NAMES.length));
+				
 				if (0 < tableCount && tableCount < DbConnection.TABLE_NAMES.length)
 				{
+					Logger.error("There are some tables, but not the right amount.");
+					
 					// Partial database.
 					// TODO Alert user that there's something seriously wrong with the DB and they need to check it out.
 					// TODO Log this, exit.
@@ -121,8 +138,9 @@ public class DataSource
 			
 		} catch (SQLException e)
 		{
-			// TODO Alert user, log, exit
-			e.printStackTrace();
+			Logger.error("Error while checking if Tables Exist: \n" + e);
+			
+			Logger.trace(e);
 		}
 		
 		return tablesExist;
@@ -130,58 +148,38 @@ public class DataSource
 	
 	private boolean createTables()
 	{
+		Logger.debug("Creating tables");
+		
 		boolean tablesCreated = false;
 		
 		try
 		{
-			StringBuilder query = 
+			String createTableScript = 
 					
-					new StringBuilder()
-					.append("CREATE TABLE doc ")
-					.append("( ")
-					.append("    id INTEGER NOT NULL PRIMARY KEY, ")
-					.append("    name TEXT NOT NULL, ")
-					.append("    description TEXT, ")
-					.append("    data BLOB NOT NULL,  ")
-					.append("    add_date INTEGER, ")
-					.append("    mod_date INTEGER  ")
-					.append(") ");
+					String
+					.join(" \n", 
+							
+							Files
+							.readAllLines(
+									
+									Paths
+									.get(
+											DataSource
+											.class
+											.getResource("Create_Tables.sql")
+											.toURI()), 
+									Charset.defaultCharset()));
 			
-			dbConnection.executeStatement(query.toString());
+			dbConnection.executeStatement(createTableScript);
 			
-			query = 
-					
-					new StringBuilder()
-					.append("CREATE TRIGGER trg_add_date  ")
-					.append("AFTER INSERT ")
-					.append("ON doc ")
-					.append("BEGIN ")
-					.append("    UPDATE doc  ")
-					.append("    SET add_date = DATETIME('NOW')  ")
-					.append("    WHERE id = NEW.id; ")
-					.append("END ");
+			Logger.debug("Tables successfully created.");
 			
-			dbConnection.executeStatement(query.toString());
-			
-			query = 
-					
-					new StringBuilder()
-					.append("CREATE TRIGGER trg_mod_date ")
-					.append("AFTER UPDATE ")
-					.append("ON doc ")
-					.append("BEGIN ")
-					.append("    UPDATE doc  ")
-					.append("    SET mod_date = DATETIME('NOW') ")
-					.append("    WHERE id = NEW.id; ")
-					.append("END ");
-			
-			dbConnection.executeStatement(query.toString());
-			
-			tablesCreated = true;
-		} catch (SQLException e)
+		} catch (URISyntaxException | IOException | SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			
+			Logger.error("Error while trying to create tables: \n" + e);
+			
+			Logger.trace(e);
 		}
 		
 		return tablesCreated;
@@ -189,6 +187,8 @@ public class DataSource
 	
 	public List<Doc> gatherAllDocs()
 	{
+		Logger.debug("Gathering all Docs");
+		
 		List<Doc> docs = new ArrayList<>();
 		
 		StringBuilder query = 
@@ -213,17 +213,23 @@ public class DataSource
 				
 				docs.add(new Doc(id,name,description,addDate,modDate));
 			}
+			
+			Logger.debug(String.format("%d docs gathered.", docs.size()));
 		} catch (SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			
+			Logger.error("Error while trying to gather docs: \n" + e);
+			
+			Logger.trace(e);
 		} 
 		
 		return docs;
 	}
 	
-	public List<Doc> gatherDocsByNameOrDescription(String searchValue)
+	public List<Doc> searchForDocs(String searchValue)
 	{
+		Logger.debug("Searching for docs with param: " + searchValue);
+		
 		List<Doc> docs = new ArrayList<>();
 		
 		StringBuilder query = 
@@ -260,8 +266,10 @@ public class DataSource
 			}
 		} catch (SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			
+			Logger.error("Error while trying to search for Doc: \n" + e);
+			
+			Logger.trace(e);
 		}
 		
 		return docs;
@@ -269,6 +277,8 @@ public class DataSource
 	
 	public void addDoc(Doc doc)
 	{
+		Logger.debug("Adding " + doc.getName());
+		
 		StringBuilder query = 
 				
 				new StringBuilder()
@@ -295,15 +305,20 @@ public class DataSource
 			
 			dbConnection.executeStatement(preparedStatement);
 			
+			Logger.debug(doc.getName() + " successfully added");
+			
 		} catch (SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			Logger.error("Error while trying to add Doc: \n" + e);
+			
+			Logger.trace(e);
 		}
 	}
 	
 	public void updateDoc(Doc doc)
 	{
+		Logger.debug("Updating " + doc.getName());
+		
 		StringBuilder query =
 				
 				new StringBuilder()
@@ -329,15 +344,21 @@ public class DataSource
 			
 			dbConnection.executeStatement(preparedStatement);
 			
+			Logger.debug(doc.getName() + " successfully updated");
+			
 		} catch (SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			
+			Logger.error("Error while trying to update Doc: \n" + e);
+			
+			Logger.trace(e);
 		}
 	}
 	
 	public void deleteDoc(Doc doc)
 	{
+		Logger.debug("Deleting " + doc.getName());
+		
 		StringBuilder query = 
 				
 				new StringBuilder()
@@ -353,15 +374,21 @@ public class DataSource
 			
 			dbConnection.executeStatement(preparedStatement);
 			
+			Logger.debug(doc.getName() + " successfully deleted");
+			
 		} catch (SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			
+			Logger.error("Error while trying to delete Doc: \n" + e);
+			
+			Logger.trace(e);
 		}
 	}
 	
 	public byte[] gatherDataForDoc(Doc doc)
 	{
+		Logger.debug("Gathering data for " + doc.getName());
+		
 		byte[] docData = null;
 		
 		StringBuilder query = 
@@ -382,10 +409,14 @@ public class DataSource
 				docData = resultSet.getBytes("data");
 			}
 			
+			Logger.debug(doc.getName() + "'s successfully gathered");
+			
 		} catch (SQLException e)
 		{
-			// TODO Log
-			e.printStackTrace();
+			
+			Logger.error("Error while trying to gather Doc data: \n" + e);
+			
+			Logger.trace(e);
 		}
 		
 		return docData;
@@ -399,6 +430,8 @@ public class DataSource
 	
 	public void closeConnection()
 	{
+		Logger.info("Closing DataSource connection.");
+		
 		dbConnection.disconnect();
 	}
 }

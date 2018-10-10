@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import org.pmw.tinylog.Logger;
+
 import com.lakedev.docdb.service.db.DataSource;
 import com.lakedev.docdb.service.db.Doc;
 
@@ -61,6 +63,8 @@ public class PrimaryUIController implements Initializable
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
+		Logger.debug("Initializing PrimaryUIController");
+		
 		buildTables();
 		
 		buildContextMenus();
@@ -68,6 +72,8 @@ public class PrimaryUIController implements Initializable
 	
 	private void buildTables()
 	{
+		Logger.trace("Building tables for PrimaryUI");
+		
 		PropertyValueFactory<Doc, String> docNamePVF = new PropertyValueFactory<>("name");
 		
 		PropertyValueFactory<Doc, String> docDescPVF = new PropertyValueFactory<>("description");
@@ -95,6 +101,8 @@ public class PrimaryUIController implements Initializable
 	
 	private void buildContextMenus()
 	{
+		Logger.trace("Building ContextMenus for PrimaryUI");
+		
 		cmDb = new ContextMenu();
 		
 		cmDmz = new ContextMenu();
@@ -110,8 +118,6 @@ public class PrimaryUIController implements Initializable
 		dbToDmz.setOnAction((selected) -> 
 		{
 			Doc selectedDoc = tvDb.getSelectionModel().getSelectedItem();
-			
-			
 		});
 		
 		dbDelete.setOnAction((selected) -> 
@@ -145,7 +151,7 @@ public class PrimaryUIController implements Initializable
 							
 							DataSource
 							.getInstance()
-							.gatherDocsByNameOrDescription(searchText);
+							.searchForDocs(searchText);
 		
 		tvDb.getItems().clear();
 		
