@@ -1,2 +1,4 @@
-*.db
-bin/
+.vscode/
+__pycache__/
+*.pyc
+*.log
