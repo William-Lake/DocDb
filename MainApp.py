@@ -1,6 +1,6 @@
 import logging
 from logging.config import fileConfig
-from PySimpleGUI import Window, Text, Input, FilesBrowse, OK, Cancel
+from PySimpleGUI import Window, Text, Input, FilesBrowse, OK, Cancel, Frame, Combo, FolderBrowse
 from service.db_utility import DatabaseUtility
 from service.file_processor import FileProcessor
 
@@ -23,19 +23,36 @@ class PrimaryUI(Window):
 
     def __build_ui(self):
 
-        layout = [ [ Text('Filename') ],
-                            [ Input(), FilesBrowse()], 
-                            [ OK(key=self.IMPORT), Cancel()]]
+        layout = [ [ self.__build_import_ui() ], [ self.__build_export_ui() ] ]
 
         self.Layout(layout)
+
+    def __build_import_ui(self):
+
+        return Frame(title='Import',layout=[ [ Text('Filename') ],
+                            [ Input(), FilesBrowse()], 
+                            [ OK(key=self.IMPORT)]])
+
+    def __build_export_ui(self):
+
+        self.cmb_doc_names = Combo([])
+
+        return Frame(title='Export',layout=[ [ self.cmb_doc_names, FolderBrowse() ],
+                            [ OK(key=self.EXPORT)]])
+
+    def set_doc_names(self,doc_names):
+
+        self.cmb_doc_names.Values = doc_names
 
 if __name__ == '__main__':
 
     fileConfig('logging_config.ini')
 
+    db_util = DatabaseUtility()
+
     primary_ui = PrimaryUI()
 
-    db_util = DatabaseUtility()
+    primary_ui.set_doc_names(db_util.get_saved_doc_names())
 
     file_processor = FileProcessor()
 
@@ -51,6 +68,6 @@ if __name__ == '__main__':
 
                 if event == primary_ui.IMPORT: db_util.save_docs(file_processor.convert_file_names_to_name_data_dict(file_names[0]))
 
-                # elif event == primary_ui.EXPORT: print('Export')
+                # elif event == primary_ui.EXPORT: 
 
         else: break
