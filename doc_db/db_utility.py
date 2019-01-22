@@ -1,6 +1,6 @@
 import logging
 from peewee import *
-from service.database import *
+from database import *
 
 class DatabaseUtility(object):
 

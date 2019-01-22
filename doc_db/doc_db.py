@@ -1,8 +1,8 @@
 import logging
 from logging.config import fileConfig
 from PySimpleGUI import Window, Text, Input, FilesBrowse, OK, Cancel, Frame, Combo, FolderBrowse
-from service.db_utility import DatabaseUtility
-from service.file_processor import FileProcessor
+from db_utility import DatabaseUtility
+from file_processor import FileProcessor
 
 
 class PrimaryUI(Window):
