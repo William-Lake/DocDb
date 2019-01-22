@@ -44,7 +44,7 @@ class PrimaryUI(Window):
 
         self.cmb_doc_names.Values = doc_names
 
-if __name__ == '__main__':
+def main():
 
     fileConfig('logging_config.ini')
 
